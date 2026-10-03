@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calles de la piscina</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f3f6f9;--card:#fff;--tx:#12202e;--mut:#5d6f80;--bd:#d5dde5;--free:#2e9e5b;--busy:#d6403a;--mid:#f0902a;--none:#8796a5;--water:#4fb4e0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d141b;--card:#16202a;--tx:#e8eef4;--mut:#93a4b4;--bd:#2a3846}}
+:root[data-theme="dark"]{--bg:#0d141b;--card:#16202a;--tx:#e8eef4;--mut:#93a4b4;--bd:#2a3846}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:14px;max-width:1200px;margin-inline:auto}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+h1{font-size:1.25rem;margin:0}
+.now{color:var(--mut);font-size:.95rem}
+.pool{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));height:clamp(300px,58vh,620px);border:6px solid #cfd8de;border-radius:14px;background:var(--water);overflow:hidden}
+.lane{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:6px 2px;text-align:center;border-right:4px dashed rgba(255,255,255,.85);min-width:0}
+.lane:last-child{border-right:0}
+.lane::before{content:"";position:absolute;inset:0;background:var(--c);opacity:.78;transition:background .3s}
+.lane .n{position:relative;z-index:1;font-weight:800;font-size:clamp(1.4rem,4vw,2.6rem);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.lane .s{position:relative;z-index:1;color:#fff;font-weight:700;font-size:clamp(.7rem,1.9vw,1.4rem);text-shadow:0 1px 3px rgba(0,0,0,.45);overflow-wrap:anywhere;max-width:100%}
+.free{--c:var(--free)}.busy{--c:var(--busy)}.mid{--c:var(--mid)}.none{--c:var(--none)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-top:12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:7px 10px}
+input[type=color]{padding:2px;width:44px;height:36px}
+button{cursor:pointer}button.p{background:#1f6fb5;color:#fff;border-color:#1f6fb5}button.d{color:#d6403a}
+.slot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--bd)}
+.slot:first-of-type{border-top:0}
+.dots{display:flex;gap:3px;align-items:center}.dot{width:14px;height:14px;border-radius:50%;background:var(--c)}
+.leg span{margin-right:12px;font-size:.85rem;color:var(--mut)}.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;background:var(--c)}
+.days label{display:inline-flex;gap:3px;align-items:center;margin-right:8px}
+.ln{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:5px 0}.ln b{width:70px}
+.seg button{border-radius:0;margin:0 -1px 0 0}.seg button.on{color:#fff;background:var(--c);border-color:var(--c)}
+.cfg{display:flex;flex-wrap:wrap;gap:12px}.cfg .row{flex:1 1 220px}
+#msg{color:var(--mut);font-size:.85rem;margin-top:8px}
+[hidden]{display:none!important}
+#sw{position:fixed;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:9}
+body.tv{padding:18px;cursor:none;user-select:none;-webkit-user-select:none}
+body.tv #vrow,body.tv #lg,body.tv #listc,body.tv #ed,body.tv #cfgc,body.tv #adm{display:none!important}
+body.tv .pool{height:calc(100dvh - 250px);min-height:240px}
+body.tv{--bg:#fff;--card:#fff;--tx:#12202e;--mut:#4a5b6b;--bd:#d5dde5;background:#fff;color:#12202e}
+body.tv header{display:none}
+#clk{text-align:center;margin:4px 0 12px}
+#ct{font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05;font-size:clamp(2.2rem,6vw,4rem)}
+#sy{font-size:.75rem;color:var(--mut);opacity:.7}
+body.tv #sy{display:none}
+#cs{color:var(--mut);font-size:1.05rem;margin-top:2px}
+body.tv #ct{font-size:clamp(3rem,9vw,7rem)}
+body.tv #cs{font-size:1.6rem}
+body.tv .lane .n{font-size:clamp(2rem,7vw,6rem)}
+body.tv .lane .s{font-size:clamp(1rem,2.8vw,2.8rem)}
+body.tv .leg span{font-size:1.2rem}
+body.tv #sw{opacity:.07;padding:4px 8px;font-size:.8rem}
+body.tv #sw:hover{opacity:.6}
+</style>
+</head>
+<body class="tv">
+<header class="row" style="justify-content:flex-end"><button id="adm">Entrar como admin</button></header>
+<div id="clk"><div id="ct"></div><div id="cs"></div><div id="sy"></div></div>
+<div class="card" id="lg" hidden><div class="row"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password"><button class="p" id="go">Entrar</button><button id="lc">Cancelar</button></div></div>
+<div class="row" id="vrow" style="margin:10px 0"><span class="now">Ver:</span>
+<select id="vd"></select><input type="time" id="vt"><button id="vn">Ahora</button></div>
+<div class="pool" id="pool"></div>
+<div class="leg" id="leg" style="margin-top:8px"></div>
+<div class="card" id="listc"><div class="row" style="justify-content:space-between"><b>Franjas horarias</b><button class="p" id="add" hidden>+ Nueva franja</button></div><div id="list"></div><div id="msg"></div></div>
+<div class="card" id="ed" hidden>
+<b id="edt">Franja</b>
+<div class="row" style="margin:8px 0"><input id="nm" placeholder="Nombre (opcional)"><input type="time" id="t1"> – <input type="time" id="t2"></div>
+<div class="days" id="days"></div>
+<div id="lns" style="margin-top:6px"></div>
+<div class="row" style="margin-top:10px"><button class="p" id="sv">Guardar</button><button id="cx">Cancelar</button></div>
+</div>
+<div class="card" id="cfgc" hidden><b>Nombres y colores de los estados</b>
+<div class="cfg" id="cfg" style="margin-top:8px"></div></div>
+<button id="sw">⚙</button>
+<script>
+const SUPA_URL="https://wvdeextqjgsqpxnyztxq.supabase.co";
+const SUPA_KEY="sb_publishable_ATw5yJgYPm-O2FMzn4rg9A_kvogwwWx";
+const DAYS=["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"];
+const DEF={free:{name:"Libre",color:"#2e9e5b"},mid:{name:"Sin franja definida",color:"#8796a5"},busy:{name:"Ocupada",color:"#d6403a"}};
+const KEYS=["free","mid","busy"];
+let cfg=JSON.parse(JSON.stringify(DEF)),slots=[],edit=null,canWrite=false,view=null,sess=null,q=Promise.resolve(),dirty=false,ct=null,lastMin="",off=0;
+try{sess=JSON.parse(localStorage.getItem("pool_sess")||"null")}catch(e){}
+const $=id=>document.getElementById(id);
+const TZ=""; /* zona horaria de la piscina, p. ej. "Europe/Madrid"; vacío = la del dispositivo */
+const fmt=new Intl.DateTimeFormat("en-US",{timeZone:TZ||undefined,hour12:false,weekday:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"});
+function nowP(){
+  const o={};fmt.formatToParts(new Date(Date.now()+off)).forEach(x=>o[x.type]=x.value);
+  return{d:["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].indexOf(o.weekday),h:o.hour==="24"?"00":o.hour,m:o.minute,s:o.second};
+}
+const stName=k=>cfg[k].name||DEF[k].name;
+function setMsg(t){$("msg").textContent=t||""}
+function matches(s,d,t){return s.days.includes(d)&&t>=s.start&&t<s.end}
+function active(d,t){return slots.filter(s=>matches(s,d,t)).sort((a,b)=>b.start.localeCompare(a.start))[0]||null}
+function cur(){const n=nowP();return view||{d:n.d,t:n.h+":"+n.m}}
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
+/* ---------- Supabase ---------- */
+function saveSess(s){sess=s;try{s?localStorage.setItem("pool_sess",JSON.stringify(s)):localStorage.removeItem("pool_sess")}catch(e){}}
+function api(path,opt,tok){
+  opt=opt||{};
+  const h=Object.assign({apikey:SUPA_KEY,"Content-Type":"application/json"},tok?{Authorization:"Bearer "+tok}:{},opt.headers||{});
+  return fetch(SUPA_URL+path,Object.assign({},opt,{headers:h}));
+}
+function toSess(j){return{access:j.access_token,refresh:j.refresh_token,exp:Date.now()+j.expires_in*1000}}
+async function login(email,pw){
+  const r=await api("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email,password:pw})});
+  const j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||"Email o contraseña incorrectos");
+  saveSess(toSess(j));
+}
+async function refresh(){
+  if(!sess)return false;
+  try{const r=await api("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:sess.refresh})});
+    const j=await r.json();if(!r.ok)throw 0;saveSess(toSess(j));return true}
+  catch(e){saveSess(null);return false}
+}
+async function token(){if(!sess)return null;if(Date.now()>sess.exp-60000&&!await refresh())return null;return sess.access}
+function applyData(d){
+  slots=Array.isArray(d.slots)?d.slots:[];
+  const c=d.cfg||{};
+  KEYS.forEach(k=>{if(c[k]&&c[k].name!=="Intermedio")cfg[k]={name:typeof c[k].name==="string"?c[k].name:DEF[k].name,color:/^#[0-9a-f]{6}$/i.test(c[k].color||"")?c[k].color:DEF[k].color}});
+}
+async function load(){
+  try{const r=await api("/rest/v1/pool_data?id=eq.1&select=data",{cache:"no-store"});
+    if(!r.ok)throw new Error(r.status);
+    const j=await r.json();if(j[0])applyData(j[0].data||{});
+    return true}
+  catch(e){setMsg("No se pudo cargar: "+e.message);return false}
+}
+function persist(){
+  dirty=true;
+  q=q.then(async()=>{
+    const t=await token();
+    if(!t){dirty=false;setAdmin();setMsg("La sesión ha caducado. Vuelve a entrar.");return}
+    try{
+      const r=await api("/rest/v1/pool_data?id=eq.1",{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({data:{slots,cfg},updated_at:new Date().toISOString()})},t);
+      const j=await r.json().catch(()=>null);
+      if(!r.ok)throw new Error((j&&j.message)||r.status);
+      if(!Array.isArray(j)||!j.length)throw new Error("no se actualizó ninguna fila (revisa la fila id=1 y las políticas)");
+      setMsg("Guardado ✓")
+    }catch(e){setMsg("Error al guardar: "+e.message)}
+    dirty=false;
+  });
+  return q;
+}
+const persistCfg=()=>{dirty=true;clearTimeout(ct);ct=setTimeout(persist,600)};
+/* ---------- UI ---------- */
+function applyCfg(){
+  KEYS.forEach(k=>document.documentElement.style.setProperty("--"+k,cfg[k].color));
+  $("leg").innerHTML=KEYS.map(k=>`<span class="${k}"><i></i>${esc(stName(k))}</span>`).join("");
+}
+function buildCfg(){
+  $("cfg").innerHTML=KEYS.map(k=>`<div class="row"><input type="color" data-c="${k}" value="${cfg[k].color}"><input data-n="${k}" value="${esc(cfg[k].name)}" maxlength="20"></div>`).join("")+`<div class="row"><button id="rst">Restablecer</button></div>`;
+}
+function render(){
+  const c=cur(),a=active(c.d,c.t);
+  $("cs").textContent=(view?"Consultando: ":"")+DAYS[c.d]+(a?" · "+(a.name||a.start+"–"+a.end):"");tick();
+  $("pool").innerHTML=[0,1,2,3,4,5].map(i=>{const st=a?a.lanes[i]:"mid";
+    return `<div class="lane ${st}"><div class="n">${i+1}</div><div class="s">${esc(stName(st))}</div></div>`}).join("");
+  const sorted=[...slots].sort((x,y)=>x.start.localeCompare(y.start));
+  $("list").innerHTML=sorted.length?sorted.map(s=>`<div class="slot"><div><b>${esc(s.name||"Franja")}</b> ${s.start}–${s.end}<br><small class="now">${s.days.length==7?"Todos los días":s.days.map(d=>DAYS[d].slice(0,3)).join(", ")}</small></div>
+  <div class="dots">${s.lanes.map(l=>`<span class="dot ${l}"></span>`).join("")}</div>
+  ${canWrite?`<div class="row"><button data-e="${s.id}">Editar</button><button class="d" data-x="${s.id}">Borrar</button></div>`:""}</div>`).join(""):`<p class="now">Aún no hay franjas.</p>`;
+}
+function renderLanes(){
+  $("lns").innerHTML=edit.lanes.map((v,i)=>`<div class="ln"><b>Calle ${i+1}</b><span class="seg">${KEYS.map(k=>`<button class="${k} ${v==k?"on":""}" data-l="${i}" data-v="${k}">${esc(stName(k))}</button>`).join("")}</span></div>`).join("");
+}
+function refreshUi(){
+  applyCfg();if(!$("cfg").contains(document.activeElement))buildCfg();render();if(edit)renderLanes();
+}
+function setAdmin(){
+  canWrite=!!sess;
+  $("adm").textContent=canWrite?"Salir":"Entrar como admin";
+  $("add").hidden=!canWrite;$("cfgc").hidden=!canWrite;
+  if(!canWrite){$("ed").hidden=true;edit=null}
+  refreshUi();
+}
+$("adm").onclick=()=>{
+  if(sess){saveSess(null);setAdmin();setMsg("Sesión cerrada.");return}
+  $("lg").hidden=!$("lg").hidden;if(!$("lg").hidden)$("em").focus();
+};
+$("lc").onclick=()=>{$("lg").hidden=true};
+async function doLogin(){
+  setMsg("Entrando…");
+  try{await login($("em").value.trim(),$("pw").value);$("pw").value="";$("lg").hidden=true;setAdmin();setMsg("Sesión de admin iniciada.")}
+  catch(e){setMsg(e.message)}
+}
+$("go").onclick=doLogin;$("pw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
+$("cfg").addEventListener("input",e=>{
+  const t=e.target,k=t.dataset.c||t.dataset.n;if(!k||!canWrite)return;
+  if(t.dataset.c)cfg[k].color=t.value;else cfg[k].name=t.value;
+  applyCfg();render();if(edit)renderLanes();persistCfg();
+});
+$("cfg").addEventListener("click",e=>{
+  if(e.target.id==="rst"&&canWrite){cfg=JSON.parse(JSON.stringify(DEF));applyCfg();buildCfg();render();if(edit)renderLanes();persistCfg()}
+});
+function openEd(s){
+  edit=s?JSON.parse(JSON.stringify(s)):{id:"s"+Date.now(),name:"",start:"09:00",end:"10:00",days:[0,1,2,3,4],lanes:Array(6).fill("free")};
+  $("edt").textContent=s?"Editar franja":"Nueva franja";
+  $("nm").value=edit.name;$("t1").value=edit.start;$("t2").value=edit.end;
+  $("days").innerHTML=DAYS.map((d,i)=>`<label><input type="checkbox" data-d="${i}" ${edit.days.includes(i)?"checked":""}>${d.slice(0,3)}</label>`).join("");
+  renderLanes();
+  $("ed").hidden=false;$("ed").scrollIntoView({behavior:"smooth"});
+}
+$("add").onclick=()=>canWrite&&openEd(null);
+$("cx").onclick=()=>{$("ed").hidden=true;edit=null};
+$("lns").onclick=e=>{const b=e.target.closest("button");if(!b)return;edit.lanes[+b.dataset.l]=b.dataset.v;
+  b.parentElement.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b))};
+$("sv").onclick=async()=>{
+  edit.name=$("nm").value.trim();edit.start=$("t1").value;edit.end=$("t2").value;
+  edit.days=[...document.querySelectorAll("#days input:checked")].map(x=>+x.dataset.d);
+  if(!edit.start||!edit.end||edit.end<=edit.start){setMsg("La hora de fin debe ser posterior a la de inicio.");return}
+  if(!edit.days.length){setMsg("Elige al menos un día.");return}
+  const i=slots.findIndex(s=>s.id===edit.id);if(i>=0)slots[i]=edit;else slots.push(edit);
+  $("ed").hidden=true;edit=null;render();await persist();
+};
+$("list").onclick=async e=>{
+  const b=e.target.closest("button");if(!b||!canWrite)return;
+  if(b.dataset.e)openEd(slots.find(s=>s.id===b.dataset.e));
+  if(b.dataset.x&&confirm("¿Borrar esta franja?")){slots=slots.filter(s=>s.id!==b.dataset.x);render();await persist()}
+};
+$("vd").innerHTML=DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join("");
+function syncView(){const c=cur();$("vd").value=c.d;$("vt").value=c.t}
+const onV=()=>{view={d:+$("vd").value,t:$("vt").value||"00:00"};render()};
+$("vd").onchange=onV;$("vt").onchange=onV;
+$("vn").onclick=()=>{view=null;syncView();render()};
+function setMode(tv){
+  document.body.classList.toggle("tv",tv);
+  $("sw").textContent=tv?"⚙":"📺 Modo TV";
+  if(tv){view=null;edit=null;$("ed").hidden=true;$("lg").hidden=true;syncView()}
+  render();
+}
+$("sw").onclick=async()=>{const tv=!document.body.classList.contains("tv");setMode(tv);if(tv&&!SUPA_KEY.startsWith("PEGA")&&await load())refreshUi()};
+syncView();setAdmin();setMode(true);
+function tick(){
+  const n=nowP(),t=n.h+":"+n.m;
+  $("ct").textContent=view?view.t:t+":"+n.s;
+  if(!view&&t!==lastMin){lastMin=t;syncView();render()}
+}
+async function syncTime(){
+  const tries=[
+    async()=>{const t0=Date.now();const r=await api("/rest/v1/rpc/server_time",{method:"POST",body:"{}"});if(!r.ok)throw 0;return{ms:Date.parse(await r.json()),t0,t1:Date.now(),src:"servidor"}},
+    async()=>{const t0=Date.now();const r=await api("/rest/v1/pool_data?id=eq.1&select=id",{cache:"no-store"});const h=r.headers.get("date");if(!h)throw 0;return{ms:Date.parse(h)+500,t0,t1:Date.now(),src:"servidor"}},
+    async()=>{const t0=Date.now();const r=await fetch("https://timeapi.io/api/Time/current/zone?timeZone=UTC",{cache:"no-store"});const j=await r.json();return{ms:Date.parse(j.dateTime.replace(/(\.\d{3})\d*/,"$1")+"Z"),t0,t1:Date.now(),src:"timeapi.io"}}
+  ];
+  for(const f of tries){
+    try{const x=await f();if(isNaN(x.ms))throw 0;
+      off=x.ms+(x.t1-x.t0)/2-x.t1;
+      $("sy").textContent="Hora sincronizada ("+x.src+")";return}
+    catch(e){}
+  }
+  $("sy").textContent="Sin sincronizar: usando la hora del dispositivo";
+}
+function loop(){tick();setTimeout(loop,1000-((Date.now()+off)%1000)+10)}
+loop();syncTime();setInterval(syncTime,600000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncTime()});
+setInterval(async()=>{if(edit||dirty||SUPA_KEY.startsWith("PEGA"))return;if(await load())refreshUi()},20000);
+(async()=>{
+  if(SUPA_KEY.startsWith("PEGA")){setMsg("Falta pegar la clave anon de Supabase en la constante SUPA_KEY del HTML.");return}
+  if(sess&&!await token())saveSess(null);
+  setAdmin();
+  if(await load())refreshUi();
+})();
+</script>
+</body>
+</html>
