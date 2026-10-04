@@ -32,14 +32,14 @@ button{cursor:pointer}button.p{background:#1f6fb5;color:#fff;border-color:#1f6fb
 .dots{display:flex;gap:3px;align-items:center}.dot{width:14px;height:14px;border-radius:50%;background:var(--c)}
 .leg span{margin-right:12px;font-size:.85rem;color:var(--mut)}.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;background:var(--c)}
 .days label{display:inline-flex;gap:3px;align-items:center;margin-right:8px}
-.ln{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:5px 0}.ln b{width:70px}
+.ln{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:5px 0}.ln b{width:70px}.ln input:not([type=color]){flex:1 1 140px;min-width:120px}
 .seg button{border-radius:0;margin:0 -1px 0 0}.seg button.on{color:#fff;background:var(--c);border-color:var(--c)}
 .cfg{display:flex;flex-wrap:wrap;gap:12px}.cfg .row{flex:1 1 220px}
 #msg{color:var(--mut);font-size:.85rem;margin-top:8px}
 [hidden]{display:none!important}
 #sw{position:fixed;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:9}
 body.tv{padding:18px;cursor:none;user-select:none;-webkit-user-select:none}
-body.tv #vrow,body.tv #lg,body.tv #listc,body.tv #ed,body.tv #cfgc,body.tv #adm{display:none!important}
+body.tv #vrow,body.tv #lg,body.tv #listc,body.tv #ed,body.tv #cfgc,body.tv #bkc,body.tv #adm{display:none!important}
 body.tv .pool{height:calc(100dvh - 250px);min-height:240px}
 body.tv{--bg:#fff;--card:#fff;--tx:#12202e;--mut:#4a5b6b;--bd:#d5dde5;background:#fff;color:#12202e}
 body.tv header{display:none}
@@ -60,7 +60,7 @@ body.tv #sw:hover{opacity:.6}
 <body class="tv">
 <header class="row" style="justify-content:flex-end"><button id="adm">Entrar como admin</button></header>
 <div id="clk"><div id="ct"></div><div id="cs"></div><div id="sy"></div></div>
-<div class="card" id="lg" hidden><div class="row"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password"><button class="p" id="go">Entrar</button><button id="lc">Cancelar</button></div></div>
+<div class="card" id="lg" hidden><div class="row"><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Contraseña" autocomplete="current-password"><button class="p" id="go">Entrar</button><button id="lc">Cancelar</button></div><div class="now" id="lgm" style="margin-top:8px"></div></div>
 <div class="row" id="vrow" style="margin:10px 0"><span class="now">Ver:</span>
 <select id="vd"></select><input type="time" id="vt"><button id="vn">Ahora</button></div>
 <div class="pool" id="pool"></div>
@@ -73,6 +73,7 @@ body.tv #sw:hover{opacity:.6}
 <div id="lns" style="margin-top:6px"></div>
 <div class="row" style="margin-top:10px"><button class="p" id="sv">Guardar</button><button id="cx">Cancelar</button></div>
 </div>
+<div class="card" id="bkc" hidden><b>Copia de seguridad</b><div class="row" style="margin-top:8px"><button id="dl">⬇ Descargar datos</button><button id="ul">⬆ Subir datos</button><input type="file" id="fi" accept=".json,application/json" hidden></div></div>
 <div class="card" id="cfgc" hidden><b>Nombres y colores de los estados</b>
 <div class="cfg" id="cfg" style="margin-top:8px"></div></div>
 <button id="sw">⚙</button>
@@ -117,8 +118,17 @@ async function refresh(){
   catch(e){saveSess(null);return false}
 }
 async function token(){if(!sess)return null;if(Date.now()>sess.exp-60000&&!await refresh())return null;return sess.access}
+function normLane(l){
+  const o={s:KEYS.includes(typeof l==="string"?l:l&&l.s)?(typeof l==="string"?l:l.s):"free"};
+  if(l&&typeof l==="object"){if(typeof l.n==="string"&&l.n.trim())o.n=l.n.trim().slice(0,30);if(/^#[0-9a-f]{6}$/i.test(l.c||""))o.c=l.c}
+  return o;
+}
+function normSlot(s){
+  const L=Array.isArray(s.lanes)?s.lanes:[];
+  return{id:String(s.id||"s"+Math.random().toString(36).slice(2)),name:String(s.name||""),start:String(s.start||"00:00"),end:String(s.end||"00:00"),days:Array.isArray(s.days)?s.days.filter(d=>d>=0&&d<7):[],lanes:Array.from({length:6},(_,i)=>normLane(L[i]))};
+}
 function applyData(d){
-  slots=Array.isArray(d.slots)?d.slots:[];
+  slots=Array.isArray(d.slots)?d.slots.map(normSlot):[];
   const c=d.cfg||{};
   KEYS.forEach(k=>{if(c[k]&&c[k].name!=="Intermedio")cfg[k]={name:typeof c[k].name==="string"?c[k].name:DEF[k].name,color:/^#[0-9a-f]{6}$/i.test(c[k].color||"")?c[k].color:DEF[k].color}});
 }
@@ -157,15 +167,15 @@ function buildCfg(){
 function render(){
   const c=cur(),a=active(c.d,c.t);
   $("cs").textContent=(view?"Consultando: ":"")+DAYS[c.d]+(a?" · "+(a.name||a.start+"–"+a.end):"");tick();
-  $("pool").innerHTML=[0,1,2,3,4,5].map(i=>{const st=a?a.lanes[i]:"mid";
-    return `<div class="lane ${st}"><div class="n">${i+1}</div><div class="s">${esc(stName(st))}</div></div>`}).join("");
+  $("pool").innerHTML=[0,1,2,3,4,5].map(i=>{const L=a?a.lanes[i]:{s:"mid"};
+    return `<div class="lane ${L.s}"${L.c?` style="--c:${L.c}"`:""}><div class="n">${i+1}</div><div class="s">${esc(L.n||stName(L.s))}</div></div>`}).join("");
   const sorted=[...slots].sort((x,y)=>x.start.localeCompare(y.start));
   $("list").innerHTML=sorted.length?sorted.map(s=>`<div class="slot"><div><b>${esc(s.name||"Franja")}</b> ${s.start}–${s.end}<br><small class="now">${s.days.length==7?"Todos los días":s.days.map(d=>DAYS[d].slice(0,3)).join(", ")}</small></div>
-  <div class="dots">${s.lanes.map(l=>`<span class="dot ${l}"></span>`).join("")}</div>
+  <div class="dots">${s.lanes.map(l=>`<span class="dot ${l.s}"${l.c?` style="--c:${l.c}"`:""}${l.n?` title="${esc(l.n)}"`:""}></span>`).join("")}</div>
   ${canWrite?`<div class="row"><button data-e="${s.id}">Editar</button><button class="d" data-x="${s.id}">Borrar</button></div>`:""}</div>`).join(""):`<p class="now">Aún no hay franjas.</p>`;
 }
 function renderLanes(){
-  $("lns").innerHTML=edit.lanes.map((v,i)=>`<div class="ln"><b>Calle ${i+1}</b><span class="seg">${KEYS.map(k=>`<button class="${k} ${v==k?"on":""}" data-l="${i}" data-v="${k}">${esc(stName(k))}</button>`).join("")}</span></div>`).join("");
+  $("lns").innerHTML=edit.lanes.map((L,i)=>`<div class="ln"><b>Calle ${i+1}</b><span class="seg">${KEYS.map(k=>`<button class="${k} ${L.s==k?"on":""}" data-l="${i}" data-v="${k}">${esc(stName(k))}</button>`).join("")}</span><input data-ln="${i}" placeholder="Texto (opcional)" maxlength="30" value="${esc(L.n||"")}"><input type="color" data-lc="${i}" value="${L.c||cfg[L.s].color}"><button data-lr="${i}" title="Quitar texto y color propios">↺</button></div>`).join("");
 }
 function refreshUi(){
   applyCfg();if(!$("cfg").contains(document.activeElement))buildCfg();render();if(edit)renderLanes();
@@ -173,7 +183,7 @@ function refreshUi(){
 function setAdmin(){
   canWrite=!!sess;
   $("adm").textContent=canWrite?"Salir":"Entrar como admin";
-  $("add").hidden=!canWrite;$("cfgc").hidden=!canWrite;
+  $("add").hidden=!canWrite;$("cfgc").hidden=!canWrite;$("bkc").hidden=!canWrite;
   if(!canWrite){$("ed").hidden=true;edit=null}
   refreshUi();
 }
@@ -183,9 +193,11 @@ $("adm").onclick=()=>{
 };
 $("lc").onclick=()=>{$("lg").hidden=true};
 async function doLogin(){
-  setMsg("Entrando…");
-  try{await login($("em").value.trim(),$("pw").value);$("pw").value="";$("lg").hidden=true;setAdmin();setMsg("Sesión de admin iniciada.")}
-  catch(e){setMsg(e.message)}
+  const m=t=>{$("lgm").textContent=t;setMsg(t)};
+  if(!$("em").value.trim()||!$("pw").value){m("Escribe el email y la contraseña.");return}
+  m("Entrando…");
+  try{await login($("em").value.trim(),$("pw").value);$("pw").value="";$("lg").hidden=true;$("lgm").textContent="";setAdmin();setMsg("Sesión de admin iniciada.")}
+  catch(e){m(e instanceof TypeError?"No se pudo conectar con Supabase. Revisa la conexión.":"No se pudo entrar: "+e.message)}
 }
 $("go").onclick=doLogin;$("pw").onkeydown=e=>{if(e.key==="Enter")doLogin()};
 $("cfg").addEventListener("input",e=>{
@@ -197,7 +209,7 @@ $("cfg").addEventListener("click",e=>{
   if(e.target.id==="rst"&&canWrite){cfg=JSON.parse(JSON.stringify(DEF));applyCfg();buildCfg();render();if(edit)renderLanes();persistCfg()}
 });
 function openEd(s){
-  edit=s?JSON.parse(JSON.stringify(s)):{id:"s"+Date.now(),name:"",start:"09:00",end:"10:00",days:[0,1,2,3,4],lanes:Array(6).fill("free")};
+  edit=s?JSON.parse(JSON.stringify(s)):{id:"s"+Date.now(),name:"",start:"09:00",end:"10:00",days:[0,1,2,3,4],lanes:Array.from({length:6},()=>({s:"free"}))};
   $("edt").textContent=s?"Editar franja":"Nueva franja";
   $("nm").value=edit.name;$("t1").value=edit.start;$("t2").value=edit.end;
   $("days").innerHTML=DAYS.map((d,i)=>`<label><input type="checkbox" data-d="${i}" ${edit.days.includes(i)?"checked":""}>${d.slice(0,3)}</label>`).join("");
@@ -206,10 +218,18 @@ function openEd(s){
 }
 $("add").onclick=()=>canWrite&&openEd(null);
 $("cx").onclick=()=>{$("ed").hidden=true;edit=null};
-$("lns").onclick=e=>{const b=e.target.closest("button");if(!b)return;edit.lanes[+b.dataset.l]=b.dataset.v;
-  b.parentElement.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b))};
+$("lns").onclick=e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.lr!==undefined){const L=edit.lanes[+b.dataset.lr];delete L.n;delete L.c;renderLanes();return}
+  const i=+b.dataset.l;edit.lanes[i].s=b.dataset.v;
+  b.parentElement.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  if(!edit.lanes[i].c)$("lns").querySelector(`[data-lc="${i}"]`).value=cfg[b.dataset.v].color;
+};
+$("lns").oninput=e=>{const t=e.target;
+  if(t.dataset.ln!==undefined)edit.lanes[+t.dataset.ln].n=t.value;
+  else if(t.dataset.lc!==undefined)edit.lanes[+t.dataset.lc].c=t.value};
 $("sv").onclick=async()=>{
-  edit.name=$("nm").value.trim();edit.start=$("t1").value;edit.end=$("t2").value;
+  edit.lanes=edit.lanes.map(normLane);edit.name=$("nm").value.trim();edit.start=$("t1").value;edit.end=$("t2").value;
   edit.days=[...document.querySelectorAll("#days input:checked")].map(x=>+x.dataset.d);
   if(!edit.start||!edit.end||edit.end<=edit.start){setMsg("La hora de fin debe ser posterior a la de inicio.");return}
   if(!edit.days.length){setMsg("Elige al menos un día.");return}
@@ -220,6 +240,22 @@ $("list").onclick=async e=>{
   const b=e.target.closest("button");if(!b||!canWrite)return;
   if(b.dataset.e)openEd(slots.find(s=>s.id===b.dataset.e));
   if(b.dataset.x&&confirm("¿Borrar esta franja?")){slots=slots.filter(s=>s.id!==b.dataset.x);render();await persist()}
+};
+$("dl").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({slots,cfg},null,2)],{type:"application/json"}));
+  a.download="datos-piscina.json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);setMsg("Archivo descargado.");
+};
+$("ul").onclick=()=>$("fi").click();
+$("fi").onchange=async e=>{
+  const f=e.target.files[0];e.target.value="";if(!f||!canWrite)return;
+  try{
+    const d=JSON.parse(await f.text());
+    if(!d||typeof d!=="object"||!Array.isArray(d.slots))throw new Error("formato no válido");
+    if(!confirm("Se sustituirán todas las franjas y colores actuales por los del archivo. ¿Continuar?"))return;
+    applyData(d);refreshUi();await persist();setMsg("Datos importados y guardados ✓");
+  }catch(err){setMsg("No se pudo importar: "+err.message)}
 };
 $("vd").innerHTML=DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join("");
 function syncView(){const c=cur();$("vd").value=c.d;$("vt").value=c.t}
